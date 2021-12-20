@@ -3,10 +3,9 @@ const dgram = require("dgram");
 const port = 3000;
 const address = process.argv[2];
 
-const clients = [];
+let clients = [];
 
-
-const transmission  = (message, sendingUser, options) => {
+const transmission = (message, sendingUser, options) => {
   const clientsToSend = sendingUser
     ? clients.filter(
         (userClient) =>
@@ -56,12 +55,17 @@ server.on("message", (message, rinfo) => {
 
   switch (messageServer.type) {
     case "conexao":
-      const newClient = { author: messageServer.author, ...rinfo };
+      const newClient = {
+        author: messageServer.author,
+        userConnect: false,
+        ...rinfo,
+      };
       clients.push(newClient);
       transmission(
         {
           type: "novaConexao",
           client: newClient,
+          users: clients,
         },
         newClient
       );
@@ -69,12 +73,39 @@ server.on("message", (message, rinfo) => {
       const connectionInfo = {
         type: "conexaoFeita",
         client: newClient,
+        users: clients,
       };
       oneMessage(connectionInfo, newClient);
 
       break;
+    case "conexaoPrivada":
+      console.log(messageServer);
+      const secondUser = clients.find(
+        (user) => user.author == messageServer.name
+      );
+      const firstUser = messageServer.user;
+      const newArray = clients.filter((e) => e.author !== firstUser.author);
+      const newArray2 = secondUser
+        ? newArray.filter((e) => e.author !== secondUser.author)
+        : newArray;
+      clients = newArray2;
+
+      clients.push({ ...firstUser, userConnect: secondUser });
+      clients.push({ ...secondUser, userConnect: firstUser });
+
+      transmission({
+        type: "conexaoFeita",
+        client: { ...firstUser, userConnect: secondUser },
+        users: clients,
+      });
+      transmission({
+        type: "conexaoFeita",
+        client: { ...secondUser, userConnect: firstUser },
+        users: clients,
+      });
+      break;
     case "msg":
-      transmission (
+      transmission(
         {
           type: "msg",
           message: messageServer.message,
@@ -84,7 +115,7 @@ server.on("message", (message, rinfo) => {
       );
       break;
     case "dc":
-      transmission (
+      transmission(
         {
           type: "dc",
           client: client,

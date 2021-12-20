@@ -51,6 +51,7 @@ function conectarServidor() {
 
   userClient.on("message", (message) => {
     const mensagemUsuario = JSON.parse(String(message));
+    console.log(mensagemUsuario)
 
     switch (mensagemUsuario.type) {
       case "conexaoFeita":
@@ -58,13 +59,27 @@ function conectarServidor() {
           `Você foi conectado com o IP: ${mensagemUsuario.client.address}`
         );
         console.log(`(Digite "exit" para encerrar) \n`);
-        rl.setPrompt(`${mensagemUsuario.client.address} | ${nome}: `);
-        iniciar();
+        //rl.setPrompt(`${mensagemUsuario.client.address} | ${nome}: `);
+        mensagemUsuario.users.map((e, i) => {
+          if (mensagemUsuario.client.author !== e.author)
+            console.log(`${i + 1}-${e.author}`);
+        });
+        if (!mensagemUsuario.client.userConnect) {
+          rl.setPrompt(`Digite um dos nome acima para iniciar um chat: `);
+          iniciar(mensagemUsuario.client);
+        } else {
+          rl.setPrompt(`${mensagemUsuario.client.address} | ${nome}: `);
+          iniciar(mensagemUsuario.client);
+        }
         break;
       case "novaConexao":
         escrever(
           `O usuario ${mensagemUsuario.client.author} se conectou ao servidor \n`
         );
+        mensagemUsuario.users.map((e, i) => {
+          if (mensagemUsuario.client.author !== e.author)
+            console.log(`${i + 1}-${e.author}`);
+        });
         rl.prompt();
         break;
       case "msg":
@@ -95,7 +110,7 @@ function conectarServidor() {
   });
 }
 
-function iniciar() {
+function iniciar(clientUser) {
   rl.prompt();
 
   rl.on("line", (input) => {
@@ -104,20 +119,30 @@ function iniciar() {
       return rl.write("Mensagem Inválida");
     }
 
-    switch (input) {
-      case "exit":
-        const dcMsg = {
-          type: "dc",
-        };
-        enviarMsg(dcMsg, { closeServerAfterenviarMsg: true });
-        break;
-      default:
-        const message = {
-          message: input,
-          type: "msg",
-        };
-        enviarMsg(message);
-        break;
+    if (!clientUser.userConnect) {
+      const conectionUser = {
+        type: "conexaoPrivada",
+        user: clientUser,
+        name: input,
+      };
+
+      enviarMsg(conectionUser);
+    } else {
+      switch (input) {
+        case "exit":
+          const dcMsg = {
+            type: "dc",
+          };
+          enviarMsg(dcMsg, { closeServerAfterenviarMsg: true });
+          break;
+        default:
+          const message = {
+            type: "msg",
+            message: input,
+          };
+          enviarMsg(message);
+          break;
+      }
     }
   });
 }
