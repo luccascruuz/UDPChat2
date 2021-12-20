@@ -1,3 +1,4 @@
+
 <div id="top"></div>
 
 <br />
@@ -26,15 +27,14 @@ Clone o projeto e acesse a pasta do mesmo.
 
 Com tudo já instalado o primeiro comando é o:
 ```
-# comando para iniciar o servidor
-$ node index.js
+# comando para iniciar o servidor junto com o ip onde vai rodar o servidor
+$ node index.js <ip do host>
 ```
 
 Em outro terminal iniciar o lado do usuário:
 ```
-# comando para inicar o lado do usuário
-$ node userClient.js
+# comando para inicar o lado do usuário junto com o ip do servidor
+$ node userClient.js <ip do host>
 ```
 
 Fazer o mesmo comando do usuário mais uma vez para que exista dois usuários no servidor e assim simular uma conversa entre os mesmos.
-
